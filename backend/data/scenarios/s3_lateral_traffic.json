@@ -1,0 +1,13 @@
+{
+  "id": "s3_lateral_traffic",
+  "name": "3. Suspicious traffic from one device to several",
+  "description": "WS2 port-scans the office and then sends unusual traffic to three workstations. There is no evidence of a break-in, so the correct call is Suspicious, not Critical.",
+  "topology": "enterprise_default",
+  "ticks": 14,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "steps": [
+    {"tick": 3, "type": "port_scan", "source": "WS2", "targets": ["WS1", "WS3", "WS4", "ADMIN1"], "malicious": true},
+    {"ticks": [4, 7], "type": "unusual_traffic", "source": "WS2", "targets": ["WS1", "WS3", "WS4"], "malicious": true}
+  ],
+  "expected": {"WS2": "suspicious"}
+}

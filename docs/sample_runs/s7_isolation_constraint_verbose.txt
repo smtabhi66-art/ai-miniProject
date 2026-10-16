@@ -1,0 +1,185 @@
+7. Isolation blocked by a critical service  (seed 42, active mode)
+Compromised WS1 logs into AUTH1, the only authentication server, with stolen credentials. AUTH1 then breaks into DB1 and starts moving data. AUTH1 must not be isolated because app (and so web) depends on auth. The agent should restrict AUTH1, isolate the entry point WS1, and monitor DB1.
+
+--- tick 2 ------------------------------------------------------------
+  event   successful_login     WS1 -> AUTH1
+--- tick 4 ------------------------------------------------------------
+  event   unauthorized_access  AUTH1 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+      [modus ponens] R6_targeted_asset: UnauthorizedAccess(AUTH1, DB1) ⊢ Targeted(DB1)
+      [modus ponens] R9_unauthorized_sender: UnauthorizedAccess(AUTH1, DB1) ⊢ Anomalous(AUTH1)
+      [modus ponens] M4_access_is_malicious: UnauthorizedAccess(AUTH1, DB1) ⊢ MaliciousActivity(AUTH1)
+      DB1: Targeted(DB1)  [derived by R6_targeted_asset]
+      AUTH1: Anomalous(AUTH1)  [derived by R9_unauthorized_sender]
+  Incident                               INC-001 opened for DB1 (suspicious)
+      Targeted(DB1)  [derived by R6_targeted_asset]
+        UnauthorizedAccess(AUTH1, DB1)  [observed: 1 unauthorized_access event(s) in ticks 4-4 (threshold 1 in 6)]
+  Incident                               INC-002 opened for AUTH1 (suspicious)
+      Anomalous(AUTH1)  [derived by R9_unauthorized_sender]
+        UnauthorizedAccess(AUTH1, DB1)  [observed: 1 unauthorized_access event(s) in ticks 4-4 (threshold 1 in 6)]
+  CSP: isolation decision                AUTH1=MONITOR, DB1=MONITOR
+      AUTH1 != ISOLATE  (keep_sole_critical_host, node)
+      decisions: {'AUTH1': 'MONITOR', 'DB1': 'MONITOR'}
+  Planning: HTN + goal-stack             INC-001: collect_evidence -> analyze_blast_radius -> increase_monitoring -> verify_quiet
+      HandleIncident(DB1)  [method: full]
+        Detect(DB1)  [method: collect]
+          • collect_evidence(DB1)
+        Investigate(DB1)  [method: analyze]
+          • analyze_blast_radius(DB1)
+        Contain(DB1)  [method: monitor]
+          • increase_monitoring(DB1)
+        Verify(DB1)  [method: quiet]
+          • verify_quiet(DB1)
+        Recover(DB1)  [method: none]
+  Planning: HTN + goal-stack             INC-002: collect_evidence -> analyze_blast_radius -> increase_monitoring -> verify_quiet
+      HandleIncident(AUTH1)  [method: full]
+        Detect(AUTH1)  [method: collect]
+          • collect_evidence(AUTH1)
+        Investigate(AUTH1)  [method: analyze]
+          • analyze_blast_radius(AUTH1)
+        Contain(AUTH1)  [method: monitor]
+          • increase_monitoring(AUTH1)
+        Verify(AUTH1)  [method: quiet]
+          • verify_quiet(AUTH1)
+        Recover(AUTH1)  [method: none]
+  Search: BFS, DFS, Greedy, A*           DB1: reaches 12 device(s) within 3 hop(s); 7 attack path(s) to critical assets; chokepoint(s): R2; likely direction (Greedy): DB1 -> R2 -> AUTH1; safe admin route (A*): ADMIN1 -> R1 -> R2 -> DB1
+      blast radius: [['DB1'], ['R2'], ['R1', 'APP1', 'DB2', 'AUTH1', 'R3'], ['FW1', 'WS1', 'WS2', 'WS3', 'WS4', 'ADMIN1']]
+      chokepoints: ['R2']
+  Action (simulated)                     INC-001: increase_monitoring(DB1)
+  Search: BFS, DFS, Greedy, A*           AUTH1: reaches 12 device(s) within 3 hop(s); 7 attack path(s) to critical assets; chokepoint(s): R2; likely direction (Greedy): AUTH1 -> R2 -> DB1; safe admin route (A*): ADMIN1 -> R1 -> R2 -> AUTH1
+      blast radius: [['AUTH1'], ['R2'], ['R1', 'APP1', 'DB1', 'DB2', 'R3'], ['FW1', 'WS1', 'WS2', 'WS3', 'WS4', 'ADMIN1']]
+      chokepoints: ['R2']
+  Action (simulated)                     INC-002: increase_monitoring(AUTH1)
+--- tick 5 ------------------------------------------------------------
+  event   unusual_traffic      AUTH1 -> APP1
+  event   unusual_traffic      AUTH1 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+      [modus ponens] R6_targeted_asset: UnauthorizedAccess(AUTH1, DB1) ⊢ Targeted(DB1)
+      [modus ponens] R8_unusual_sender: UnusualTraffic(AUTH1, APP1) ⊢ Anomalous(AUTH1)
+      [modus ponens] M2_traffic_is_malicious: UnusualTraffic(AUTH1, APP1) ⊢ MaliciousActivity(AUTH1)
+      DB1: Targeted(DB1)  [derived by R6_targeted_asset]
+      AUTH1: Anomalous(AUTH1)  [derived by R8_unusual_sender]
+--- tick 6 ------------------------------------------------------------
+  event   unusual_traffic      AUTH1 -> APP1
+  event   unusual_traffic      AUTH1 -> DB1
+  Logic: forward chaining (Modus Ponens) 7 inference(s); 3 device(s) flagged
+      [modus ponens] R5_exfiltration: UnauthorizedAccess(AUTH1, DB1) ∧ SustainedUnusualTraffic(AUTH1, DB1) ∧ CriticalAsset(DB1) ⊢ Compromised(AUTH1)
+      [modus ponens] R6_targeted_asset: UnauthorizedAccess(AUTH1, DB1) ⊢ Targeted(DB1)
+      [modus ponens] R8_unusual_sender: UnusualTraffic(AUTH1, APP1) ⊢ Anomalous(AUTH1)
+      [modus ponens] M2_traffic_is_malicious: UnusualTraffic(AUTH1, APP1) ⊢ MaliciousActivity(AUTH1)
+      [modus ponens] R10_threatens_asset: Compromised(AUTH1) ∧ UnusualTraffic(AUTH1, APP1) ∧ CriticalAsset(APP1) ⊢ ThreatensCriticalAsset(AUTH1, APP1)
+      [modus ponens] R10_threatens_asset: Compromised(AUTH1) ∧ UnusualTraffic(AUTH1, DB1) ∧ CriticalAsset(DB1) ⊢ ThreatensCriticalAsset(AUTH1, DB1)
+      [modus ponens] R11_entry_point: Compromised(AUTH1) ∧ LoggedIn(WS1, AUTH1) ∧ Internal(WS1) ⊢ Compromised(WS1)
+      AUTH1: Compromised(AUTH1)  [derived by R5_exfiltration]
+      WS1: Compromised(WS1)  [derived by R11_entry_point]
+      DB1: Targeted(DB1)  [derived by R6_targeted_asset]
+  Incident                               INC-003 opened for WS1 (critical)
+      Compromised(WS1)  [derived by R11_entry_point]
+        Compromised(AUTH1)  [derived by R5_exfiltration]
+          UnauthorizedAccess(AUTH1, DB1)  [observed: 1 unauthorized_access event(s) in ticks 4-6 (threshold 1 in 6)]
+          SustainedUnusualTraffic(AUTH1, DB1)  [observed: 2 unusual_traffic event(s) in ticks 5-6 (threshold 2 in 3)]
+          CriticalAsset(DB1)  [topology]
+        LoggedIn(WS1, AUTH1)  [observed: 1 successful_login event(s) in ticks 2-6 (threshold 1 in 5)]
+        Internal(WS1)  [topology]
+  CSP: isolation decision                AUTH1=RESTRICT, WS1=ISOLATE, DB1=MONITOR
+      AUTH1 != MONITOR  (contain_compromised, node)
+      WS1 != RESTRICT  (restrict_needs_service, node)
+      WS1 != MONITOR  (contain_compromised, node)
+      AUTH1 != ISOLATE  (keep_sole_critical_host, node)
+      decisions: {'AUTH1': 'RESTRICT', 'WS1': 'ISOLATE', 'DB1': 'MONITOR'}
+  Planning: HTN + goal-stack             INC-002: approve_restriction -> restrict_device -> verify_containment -> reset_credentials -> escalate
+      HandleIncident(AUTH1)  [method: resume]
+        Contain(AUTH1)  [method: by_goal_stack]
+          • approve_restriction(AUTH1)
+          • restrict_device(AUTH1)
+        Verify(AUTH1)  [method: containment]
+          • verify_containment(AUTH1)
+        Recover(AUTH1)  [method: restricted]
+          • reset_credentials(AUTH1)
+          • escalate(AUTH1)
+  Planning: HTN + goal-stack             INC-003: collect_evidence -> analyze_blast_radius -> approve_isolation -> isolate_device -> verify_containment -> remediate_device -> reset_credentials -> restore_device
+      HandleIncident(WS1)  [method: full]
+        Detect(WS1)  [method: collect]
+          • collect_evidence(WS1)
+        Investigate(WS1)  [method: analyze]
+          • analyze_blast_radius(WS1)
+        Contain(WS1)  [method: by_goal_stack]
+          • approve_isolation(WS1)
+          • isolate_device(WS1)
+        Verify(WS1)  [method: containment]
+          • verify_containment(WS1)
+        Recover(WS1)  [method: isolated]
+          • remediate_device(WS1)
+          • reset_credentials(WS1)
+          • restore_device(WS1)
+  Action (simulated)                     INC-002: restrict_device(AUTH1)
+  Search: BFS, DFS, Greedy, A*           WS1: reaches 15 device(s) within 3 hop(s); 10 attack path(s) to critical assets; chokepoint(s): R1; likely direction (Greedy): WS1 -> R1 -> R2 -> AUTH1; safe admin route (A*): ADMIN1 -> R1 -> WS1
+      blast radius: [['WS1'], ['R1'], ['FW1', 'WS2', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'], ['INET', 'WEB1', 'WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1']]
+      chokepoints: ['R1']
+  Action (simulated)                     INC-003: isolate_device(WS1)
+--- tick 7 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 5 inference(s); 3 device(s) flagged
+      [modus ponens] R6_targeted_asset: UnauthorizedAccess(AUTH1, DB1) ⊢ Targeted(DB1)
+      [modus ponens] R8_unusual_sender: UnusualTraffic(AUTH1, APP1) ⊢ Anomalous(AUTH1)
+      [modus ponens] R10_threatens_asset: Compromised(AUTH1) ∧ UnusualTraffic(AUTH1, APP1) ∧ CriticalAsset(APP1) ⊢ ThreatensCriticalAsset(AUTH1, APP1)
+      [modus ponens] R10_threatens_asset: Compromised(AUTH1) ∧ UnusualTraffic(AUTH1, DB1) ∧ CriticalAsset(DB1) ⊢ ThreatensCriticalAsset(AUTH1, DB1)
+      [modus ponens] M2_traffic_is_malicious: UnusualTraffic(AUTH1, APP1) ⊢ MaliciousActivity(AUTH1)
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+      WS1: Compromised(WS1)  [belief: concluded earlier and kept until recovery]
+      DB1: Targeted(DB1)  [derived by R6_targeted_asset]
+--- tick 8 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 5 inference(s); 3 device(s) flagged
+      [modus ponens] R6_targeted_asset: UnauthorizedAccess(AUTH1, DB1) ⊢ Targeted(DB1)
+      [modus ponens] R8_unusual_sender: UnusualTraffic(AUTH1, APP1) ⊢ Anomalous(AUTH1)
+      [modus ponens] R10_threatens_asset: Compromised(AUTH1) ∧ UnusualTraffic(AUTH1, APP1) ∧ CriticalAsset(APP1) ⊢ ThreatensCriticalAsset(AUTH1, APP1)
+      [modus ponens] R10_threatens_asset: Compromised(AUTH1) ∧ UnusualTraffic(AUTH1, DB1) ∧ CriticalAsset(DB1) ⊢ ThreatensCriticalAsset(AUTH1, DB1)
+      [modus ponens] M2_traffic_is_malicious: UnusualTraffic(AUTH1, APP1) ⊢ MaliciousActivity(AUTH1)
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+      WS1: Compromised(WS1)  [belief: concluded earlier and kept until recovery]
+      DB1: Targeted(DB1)  [derived by R6_targeted_asset]
+  Verification: Modus Tollens            INC-002: containment passed
+      Rule V1_active_compromise_behaviour: ActiveCompromise(?d) ⇒ MaliciousActivity(?d)
+      [modus tollens] V1_active_compromise_behaviour: ¬MaliciousActivity(AUTH1) ⊢ ¬ActiveCompromise(AUTH1)
+      ¬ActiveCompromise(AUTH1)  [modus tollens by V1_active_compromise_behaviour]
+        ¬MaliciousActivity(AUTH1)  [observed: no malicious events from AUTH1 in ticks 7-8]
+  Action (simulated)                     INC-002: reset_credentials(AUTH1)
+  Incident                               INC-002 contained
+  Verification: Modus Tollens            INC-003: containment passed
+      Rule V1_active_compromise_behaviour: ActiveCompromise(?d) ⇒ MaliciousActivity(?d)
+      [modus tollens] V1_active_compromise_behaviour: ¬MaliciousActivity(WS1) ⊢ ¬ActiveCompromise(WS1)
+      ¬ActiveCompromise(WS1)  [modus tollens by V1_active_compromise_behaviour]
+        ¬MaliciousActivity(WS1)  [observed: no malicious events from WS1 in ticks 7-8]
+  Action (simulated)                     INC-003: remediate_device(WS1)
+  Action (simulated)                     INC-003: reset_credentials(WS1)
+  Action (simulated)                     INC-003: restore_device(WS1)
+  Incident                               INC-003 resolved
+--- tick 9 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+      [modus ponens] R6_targeted_asset: UnauthorizedAccess(AUTH1, DB1) ⊢ Targeted(DB1)
+      [modus ponens] R9_unauthorized_sender: UnauthorizedAccess(AUTH1, DB1) ⊢ Anomalous(AUTH1)
+      [modus ponens] M4_access_is_malicious: UnauthorizedAccess(AUTH1, DB1) ⊢ MaliciousActivity(AUTH1)
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+      DB1: Targeted(DB1)  [derived by R6_targeted_asset]
+--- tick 10 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+--- tick 11 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+  Verification: quiet period             INC-001: DB1 quiet
+      No new evidence about DB1 for 2 tick(s) (last flagged at t=9)
+  Incident                               INC-001 resolved
+--- tick 12 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+--- tick 13 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+      AUTH1: Compromised(AUTH1)  [belief: concluded earlier and kept until recovery]
+
+=== Result ===
+  INC-001 DB1    suspicious decision=MONITOR  status=resolved  verified=True
+  INC-002 AUTH1  critical   decision=RESTRICT status=contained verified=True
+  INC-003 WS1    critical   decision=ISOLATE  status=resolved  verified=True
+  Performance score: 10   {'contained': 2, 'outage_ticks': 0, 'healthy_isolated': 0, 'active_compromise_ticks': 10, 'false_positives': 0}
+  Detection accuracy (peak level vs ground truth): 1.0   mistakes: none
+  Attack events delivered: 6, prevented by containment: 12

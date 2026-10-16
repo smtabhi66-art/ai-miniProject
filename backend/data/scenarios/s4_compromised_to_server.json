@@ -1,0 +1,15 @@
+{
+  "id": "s4_compromised_to_server",
+  "name": "4. Compromised workstation connected to a critical server",
+  "description": "WS3 is already compromised. It scans the server zone, gains unauthorized access to the primary database DB1 and starts pulling large amounts of data.",
+  "topology": "enterprise_default",
+  "ticks": 12,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "initial_compromised": ["WS3"],
+  "steps": [
+    {"tick": 2, "type": "port_scan", "source": "WS3", "targets": ["R2", "DB1", "AUTH1"], "malicious": true, "requires_compromise": true},
+    {"tick": 4, "type": "unauthorized_access", "source": "WS3", "target": "DB1", "malicious": true, "requires_compromise": true},
+    {"ticks": [5, 11], "type": "unusual_traffic", "source": "WS3", "target": "DB1", "malicious": true, "requires_compromise": true, "details": {"bytes": 250000}}
+  ],
+  "expected": {"WS3": "critical", "DB1": "suspicious"}
+}

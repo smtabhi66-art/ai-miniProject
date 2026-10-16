@@ -1,0 +1,64 @@
+8. Multi-step incident with verification  (seed 42, passive mode)
+An external attacker brute-forces WS2, logs in, scans the network, breaks into DB1 and starts exfiltrating data. Full response: detect, investigate, contain, verify (traffic stops), recover.
+
+--- tick 1 ------------------------------------------------------------
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+--- tick 2 ------------------------------------------------------------
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+  Incident                               INC-001 opened for WS2 (suspicious)
+--- tick 3 ------------------------------------------------------------
+  event   successful_login     INET -> WS2
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+--- tick 4 ------------------------------------------------------------
+  event   port_scan            WS2 -> R1
+  event   port_scan            WS2 -> R2
+  event   port_scan            WS2 -> WS1
+  Logic: forward chaining (Modus Ponens) 2 inference(s); 1 device(s) flagged
+--- tick 5 ------------------------------------------------------------
+  event   unauthorized_access  WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+  Incident                               INC-002 opened for DB1 (suspicious)
+--- tick 6 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+--- tick 7 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+--- tick 8 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+--- tick 9 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+--- tick 10 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+--- tick 11 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 1 device(s) flagged
+--- tick 12 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 1 device(s) flagged
+--- tick 13 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 1 device(s) flagged
+--- tick 14 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 1 device(s) flagged
+--- tick 15 ------------------------------------------------------------
+  event   unusual_traffic      WS2 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 1 device(s) flagged
+
+=== Result ===
+  INC-001 WS2    critical   decision=None     status=open      verified=False
+  INC-002 DB1    suspicious decision=None     status=open      verified=False
+  Performance score: -13   {'contained': 0, 'outage_ticks': 0, 'healthy_isolated': 0, 'active_compromise_ticks': 13, 'false_positives': 0}
+  Detection accuracy (peak level vs ground truth): 1.0   mistakes: none
+  Attack events delivered: 23, prevented by containment: 0

@@ -1,0 +1,6 @@
+=== 8-Queens: same solver, different heuristics ===
+  configuration                            assignments backtracks  pruned
+  plain backtracking                               113        105       0
+  + forward checking                                53         45     301
+  + forward checking + MRV                          52         44     291
+  + forward checking + MRV + LCV + AC-3             29         21     149

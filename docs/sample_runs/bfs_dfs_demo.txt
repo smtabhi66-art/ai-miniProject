@@ -1,0 +1,100 @@
+=== BFS: blast radius of WS2 ===
+  step  node    action  queue (front first)                visited
+     1  WS2     expand  ['R1']                             ['WS2']
+                        -> enqueue [R1]
+     2  R1      expand  ['FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1']
+                        -> enqueue [FW1, WS1, WS3, WS4, ADMIN1, R2, R3]; already seen [WS2]
+     3  FW1     expand  ['WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2'] ['WS2', 'R1', 'FW1']
+                        -> enqueue [INET, WEB1, WEB2]; already seen [R1]
+     4  WS1     expand  ['WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2'] ['WS2', 'R1', 'FW1', 'WS1']
+                        -> no new neighbours; already seen [R1]
+     5  WS3     expand  ['WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3']
+                        -> no new neighbours; already seen [R1]
+     6  WS4     expand  ['ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4']
+                        -> no new neighbours; already seen [R1]
+     7  ADMIN1  expand  ['R2', 'R3', 'INET', 'WEB1', 'WEB2'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1']
+                        -> no new neighbours; already seen [R1]
+     8  R2      expand  ['R3', 'INET', 'WEB1', 'WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2']
+                        -> enqueue [APP1, DB1, DB2, AUTH1]; already seen [R1, R3]
+     9  R3      expand  ['INET', 'WEB1', 'WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3']
+                        -> no new neighbours; already seen [R1, R2]
+    10  INET    expand  ['WEB1', 'WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET']
+                        -> no new neighbours; already seen [FW1]
+    11  WEB1    expand  ['WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1'] ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1']
+                        -> no new neighbours; already seen [FW1]
+    12  WEB2    expand  ['APP1', 'DB1', 'DB2', 'AUTH1']    ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2']
+                        -> no new neighbours; already seen [FW1]
+    13  APP1    expand  ['DB1', 'DB2', 'AUTH1']            ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2', 'APP1']
+                        -> no new neighbours; already seen [R2]
+    14  DB1     expand  ['DB2', 'AUTH1']                   ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2', 'APP1', 'DB1']
+                        -> no new neighbours; already seen [R2]
+    15  DB2     expand  ['AUTH1']                          ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2', 'APP1', 'DB1', 'DB2']
+                        -> no new neighbours; already seen [R2]
+    16  AUTH1   expand  []                                 ['WS2', 'R1', 'FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3', 'INET', 'WEB1', 'WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1']
+                        -> no new neighbours; already seen [R2]
+
+  Result by hop distance:
+    0 hop(s): WS2
+    1 hop(s): R1
+    2 hop(s): FW1, WS1, WS3, WS4, ADMIN1, R2, R3
+    3 hop(s): INET, WEB1, WEB2, APP1, DB1, DB2, AUTH1
+
+=== DFS: attack paths from WS2 to DB1 (trace) ===
+  step  node    action  stack (top first)                  current path
+     1  WS2     expand  ['R1']                             ['WS2']
+                        -> push [R1]
+     2  R1      expand  ['FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1']
+                        -> push [FW1, WS1, WS3, WS4, ADMIN1, R2, R3]
+     3  FW1     expand  ['INET', 'WEB1', 'WEB2', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1', 'FW1']
+                        -> push [INET, WEB1, WEB2]
+     4  INET    expand  ['WEB1', 'WEB2', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1', 'FW1', 'INET']
+                        -> dead end: backtrack
+     5  WEB1    expand  ['WEB2', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1', 'FW1', 'WEB1']
+                        -> dead end: backtrack
+     6  WEB2    expand  ['WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1', 'FW1', 'WEB2']
+                        -> dead end: backtrack
+     7  WS1     expand  ['WS3', 'WS4', 'ADMIN1', 'R2', 'R3'] ['WS2', 'R1', 'WS1']
+                        -> dead end: backtrack
+     8  WS3     expand  ['WS4', 'ADMIN1', 'R2', 'R3']      ['WS2', 'R1', 'WS3']
+                        -> dead end: backtrack
+     9  WS4     expand  ['ADMIN1', 'R2', 'R3']             ['WS2', 'R1', 'WS4']
+                        -> dead end: backtrack
+    10  ADMIN1  expand  ['R2', 'R3']                       ['WS2', 'R1', 'ADMIN1']
+                        -> dead end: backtrack
+    11  R2      expand  ['APP1', 'DB1', 'DB2', 'AUTH1', 'R3', 'R3'] ['WS2', 'R1', 'R2']
+                        -> push [APP1, DB1, DB2, AUTH1, R3]
+    12  APP1    expand  ['DB1', 'DB2', 'AUTH1', 'R3', 'R3'] ['WS2', 'R1', 'R2', 'APP1']
+                        -> dead end: backtrack
+    13  DB1     goal    ['DB2', 'AUTH1', 'R3', 'R3']       ['WS2', 'R1', 'R2', 'DB1']
+                        -> path found: WS2 -> R1 -> R2 -> DB1
+    14  DB2     expand  ['AUTH1', 'R3', 'R3']              ['WS2', 'R1', 'R2', 'DB2']
+                        -> dead end: backtrack
+    15  AUTH1   expand  ['R3', 'R3']                       ['WS2', 'R1', 'R2', 'AUTH1']
+                        -> dead end: backtrack
+    16  R3      expand  ['R3']                             ['WS2', 'R1', 'R2', 'R3']
+                        -> dead end: backtrack
+    17  R3      expand  ['R2']                             ['WS2', 'R1', 'R3']
+                        -> push [R2]
+    18  R2      expand  ['APP1', 'DB1', 'DB2', 'AUTH1']    ['WS2', 'R1', 'R3', 'R2']
+                        -> push [APP1, DB1, DB2, AUTH1]
+    19  APP1    expand  ['DB1', 'DB2', 'AUTH1']            ['WS2', 'R1', 'R3', 'R2', 'APP1']
+                        -> dead end: backtrack
+    20  DB1     goal    ['DB2', 'AUTH1']                   ['WS2', 'R1', 'R3', 'R2', 'DB1']
+                        -> path found: WS2 -> R1 -> R3 -> R2 -> DB1
+    21  DB2     expand  ['AUTH1']                          ['WS2', 'R1', 'R3', 'R2', 'DB2']
+                        -> dead end: backtrack
+    22  AUTH1   expand  []                                 ['WS2', 'R1', 'R3', 'R2', 'AUTH1']
+                        -> dead end: backtrack
+
+=== DFS: all attack paths from WS2 to critical hosts ['APP1', 'AUTH1', 'DB1', 'DB2', 'WEB1', 'WEB2'] ===
+    WS2 -> R1 -> FW1 -> WEB1
+    WS2 -> R1 -> FW1 -> WEB2
+    WS2 -> R1 -> R2 -> APP1
+    WS2 -> R1 -> R2 -> DB1
+    WS2 -> R1 -> R2 -> DB2
+    WS2 -> R1 -> R2 -> AUTH1
+    WS2 -> R1 -> R3 -> R2 -> APP1
+    WS2 -> R1 -> R3 -> R2 -> DB1
+    WS2 -> R1 -> R3 -> R2 -> DB2
+    WS2 -> R1 -> R3 -> R2 -> AUTH1
+  10 paths, 12 nodes expanded, truncated=False

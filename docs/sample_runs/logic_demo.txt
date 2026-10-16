@@ -1,0 +1,34 @@
+=== Propositional logic ===
+Rule: ((BruteForce ∧ LoginSuccess) → Compromised)
+Truth table of the rule:
+  Brute=F  Compr=F  Login=F   rule=T
+  Brute=F  Compr=F  Login=T   rule=T
+  Brute=F  Compr=T  Login=F   rule=T
+  Brute=F  Compr=T  Login=T   rule=T
+  Brute=T  Compr=F  Login=F   rule=T
+  Brute=T  Compr=F  Login=T   rule=F
+  Brute=T  Compr=T  Login=F   rule=T
+  Brute=T  Compr=T  Login=T   rule=T
+
+KB = ((((BruteForce ∧ LoginSuccess) → Compromised) ∧ BruteForce) ∧ LoginSuccess)
+KB ⊨ Compromised ?  True   (model checking over all 8 models)
+Modus Ponens:  ((BruteForce ∧ LoginSuccess) → Compromised),  (BruteForce ∧ LoginSuccess)  ⊢  Compromised
+Modus Tollens: (Compromised → MaliciousTraffic),  ¬MaliciousTraffic  ⊢  ¬Compromised
+Sound? KB=((Compromised → MaliciousTraffic) ∧ ¬MaliciousTraffic) ⊨ ¬Compromised: True
+Fallacy check (affirming the consequent): (Compromised → MaliciousTraffic), MaliciousTraffic ⊨ Compromised? False
+
+=== First-order (Horn clause) forward chaining on the real security rules ===
+Events: 8 failed logins INET->WS2 at ticks 1-2, then a successful login at tick 3
+
+Inference steps (each one is Modus Ponens):
+  [modus ponens] R1_brute_force_target: FailedLoginBurst(WS2) ⊢ UnderAttack(WS2)
+  [modus ponens] R2_brute_force_source: BruteForcing(INET, WS2) ⊢ Attacker(INET)
+  [modus ponens] R3_credential_compromise: BruteForcing(INET, WS2) ∧ LoggedIn(INET, WS2) ⊢ Compromised(WS2)
+  [modus ponens] M3_bruteforce_is_malicious: BruteForcing(INET, WS2) ⊢ MaliciousActivity(INET)
+
+Proof tree for WS2:
+  Compromised(WS2)  [derived by R3_credential_compromise]
+    BruteForcing(INET, WS2)  [observed: 8 failed_login event(s) in ticks 1-3 (threshold 5 in 3)]
+    LoggedIn(INET, WS2)  [observed: 1 successful_login event(s) in ticks 3-3 (threshold 1 in 5)]
+
+Classification: {INET: suspicious, WS2: critical}

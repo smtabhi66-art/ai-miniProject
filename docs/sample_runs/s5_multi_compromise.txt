@@ -1,0 +1,71 @@
+5. Multiple compromised machines with service dependencies  (seed 42, active mode)
+Compromised WS2 quietly logs into APP1, the only application server, with stolen credentials (no brute force to give it away). APP1 then breaks into DB1 and talks abnormally to both databases, while WS2 probes WS3. Web depends on app, which depends on db and auth, so APP1 cannot simply be isolated.
+
+--- tick 2 ------------------------------------------------------------
+  event   successful_login     WS2 -> APP1
+--- tick 3 ------------------------------------------------------------
+  event   unauthorized_access  APP1 -> DB1
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+  Incident                               INC-001 opened for APP1 (suspicious)
+  Incident                               INC-002 opened for DB1 (suspicious)
+  CSP: isolation decision                APP1=MONITOR, DB1=MONITOR
+  Planning: HTN + goal-stack             INC-001: collect_evidence -> analyze_blast_radius -> increase_monitoring -> verify_quiet
+  Planning: HTN + goal-stack             INC-002: collect_evidence -> analyze_blast_radius -> increase_monitoring -> verify_quiet
+  Search: BFS, DFS, Greedy, A*           APP1: reaches 12 device(s) within 3 hop(s); 7 attack path(s) to critical assets; chokepoint(s): R2; likely direction (Greedy): APP1 -> R2 -> AUTH1; safe admin route (A*): ADMIN1 -> R1 -> R2 -> APP1
+  Action (simulated)                     INC-001: increase_monitoring(APP1)
+  Search: BFS, DFS, Greedy, A*           DB1: reaches 12 device(s) within 3 hop(s); 7 attack path(s) to critical assets; chokepoint(s): R2; likely direction (Greedy): DB1 -> R2 -> AUTH1; safe admin route (A*): ADMIN1 -> R1 -> R2 -> DB1
+  Action (simulated)                     INC-002: increase_monitoring(DB1)
+--- tick 4 ------------------------------------------------------------
+  event   unusual_traffic      APP1 -> DB1
+  event   unusual_traffic      APP1 -> DB2
+  event   unusual_traffic      WS2 -> WS3
+  Logic: forward chaining (Modus Ponens) 5 inference(s); 3 device(s) flagged
+  Incident                               INC-003 opened for WS2 (suspicious)
+  CSP: isolation decision                APP1=MONITOR, WS2=MONITOR, DB1=MONITOR
+  Planning: HTN + goal-stack             INC-003: collect_evidence -> analyze_blast_radius -> increase_monitoring -> verify_quiet
+  Search: BFS, DFS, Greedy, A*           WS2: reaches 15 device(s) within 3 hop(s); 10 attack path(s) to critical assets; chokepoint(s): R1; likely direction (Greedy): WS2 -> R1 -> R2 -> AUTH1; safe admin route (A*): ADMIN1 -> R1 -> WS2
+  Action (simulated)                     INC-003: increase_monitoring(WS2)
+--- tick 5 ------------------------------------------------------------
+  event   unusual_traffic      APP1 -> DB1
+  event   unusual_traffic      APP1 -> DB2
+  event   unusual_traffic      WS2 -> WS3
+  Logic: forward chaining (Modus Ponens) 9 inference(s); 3 device(s) flagged
+  CSP: isolation decision                APP1=RESTRICT, WS2=ISOLATE, DB1=MONITOR
+  Planning: HTN + goal-stack             INC-001: approve_restriction -> restrict_device -> verify_containment -> reset_credentials -> escalate
+  Planning: HTN + goal-stack             INC-003: approve_isolation -> isolate_device -> verify_containment -> remediate_device -> reset_credentials -> restore_device
+  Action (simulated)                     INC-001: restrict_device(APP1)
+  Action (simulated)                     INC-003: isolate_device(WS2)
+--- tick 6 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 7 inference(s); 3 device(s) flagged
+--- tick 7 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 7 inference(s); 3 device(s) flagged
+  Verification: Modus Tollens            INC-001: containment passed
+  Action (simulated)                     INC-001: reset_credentials(APP1)
+  Incident                               INC-001 contained
+  Verification: Modus Tollens            INC-003: containment passed
+  Action (simulated)                     INC-003: remediate_device(WS2)
+  Action (simulated)                     INC-003: reset_credentials(WS2)
+  Action (simulated)                     INC-003: restore_device(WS2)
+  Incident                               INC-003 resolved
+--- tick 8 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+--- tick 9 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+--- tick 10 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+  Verification: quiet period             INC-002: DB1 quiet
+  Incident                               INC-002 resolved
+--- tick 11 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+--- tick 12 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+--- tick 13 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+
+=== Result ===
+  INC-001 APP1   critical   decision=RESTRICT status=contained verified=True
+  INC-002 DB1    suspicious decision=MONITOR  status=resolved  verified=True
+  INC-003 WS2    critical   decision=ISOLATE  status=resolved  verified=True
+  Performance score: 12   {'contained': 2, 'outage_ticks': 0, 'healthy_isolated': 0, 'active_compromise_ticks': 8, 'false_positives': 0}
+  Detection accuracy (peak level vs ground truth): 1.0   mistakes: none
+  Attack events delivered: 8, prevented by containment: 21

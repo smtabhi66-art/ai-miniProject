@@ -1,0 +1,14 @@
+{
+  "id": "s6_blocked_path",
+  "name": "6. Blocked path requiring an alternative route",
+  "description": "The direct R1-R2 link is down. WS4 attempts unauthorized access to AUTH1 and scans the server zone. To respond, the agent needs a management route from ADMIN1 to the servers, which A* must find through backup router R3.",
+  "topology": "enterprise_default",
+  "ticks": 16,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "initial_blocked_links": [["R1", "R2"]],
+  "steps": [
+    {"tick": 3, "type": "unauthorized_access", "source": "WS4", "target": "AUTH1", "malicious": true},
+    {"ticks": [4, 5], "type": "port_scan", "source": "WS4", "targets": ["AUTH1", "DB1"], "malicious": true}
+  ],
+  "expected": {"WS4": "suspicious", "AUTH1": "suspicious"}
+}

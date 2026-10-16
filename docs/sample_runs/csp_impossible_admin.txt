@@ -1,0 +1,35 @@
+=== The admin workstation itself is compromised ===
+
+Variables and initial domains (preference order):
+  ADMIN1  [critical]  ['ISOLATE', 'RESTRICT', 'MONITOR']
+  WS1     [critical]  ['ISOLATE', 'RESTRICT', 'MONITOR']
+
+Constraints:
+  restrict_needs_service     scope=ADMIN1
+                             ADMIN1 hosts no service, so there is no service traffic to keep: RESTRICT is meaningless
+  contain_compromised        scope=ADMIN1
+                             ADMIN1 is rated Critical: only watching it is not enough
+  restrict_needs_service     scope=WS1
+                             WS1 hosts no service, so there is no service traffic to keep: RESTRICT is meaningless
+  contain_compromised        scope=WS1
+                             WS1 is rated Critical: only watching it is not enough
+  admin_can_reach_services   scope=ADMIN1,WS1
+                             ADMIN1 must keep a path to every critical-service host it can reach now (recovery path)
+  isolation_budget           scope=ADMIN1,WS1
+                             at most 2 device(s) may be isolated at once
+
+Preprocessing (node consistency + AC-3) removed:
+  ADMIN1 != RESTRICT  (restrict_needs_service, node)
+  ADMIN1 != MONITOR  (contain_compromised, node)
+  WS1 != RESTRICT  (restrict_needs_service, node)
+  WS1 != MONITOR  (contain_compromised, node)
+Domains after preprocessing: {'ADMIN1': ['ISOLATE'], 'WS1': ['ISOLATE']}
+
+Backtracking search (MRV + forward checking):
+    1. reject    ADMIN1=ISOLATE   violates admin_can_reach_services
+
+NO SAFE ISOLATION EXISTS: no assignment satisfies every constraint
+  constraints that blocked options: {'admin_can_reach_services': 1}
+  -> the agent escalates to a human instead of acting.
+
+Stats: {'assignments': 0, 'backtracks': 0, 'pruned': 0}

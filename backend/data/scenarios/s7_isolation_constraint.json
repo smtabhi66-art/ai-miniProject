@@ -1,0 +1,15 @@
+{
+  "id": "s7_isolation_constraint",
+  "name": "7. Isolation blocked by a critical service",
+  "description": "Compromised WS1 logs into AUTH1, the only authentication server, with stolen credentials. AUTH1 then breaks into DB1 and starts moving data. AUTH1 must not be isolated because app (and so web) depends on auth. The agent should restrict AUTH1, isolate the entry point WS1, and monitor DB1.",
+  "topology": "enterprise_default",
+  "ticks": 14,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "initial_compromised": ["WS1"],
+  "steps": [
+    {"tick": 2, "type": "successful_login", "source": "WS1", "target": "AUTH1", "malicious": true, "requires_compromise": true, "compromise": "AUTH1"},
+    {"tick": 4, "type": "unauthorized_access", "source": "AUTH1", "target": "DB1", "malicious": true, "requires_compromise": true},
+    {"ticks": [5, 12], "type": "unusual_traffic", "source": "AUTH1", "targets": ["APP1", "DB1"], "malicious": true, "requires_compromise": true, "details": {"bytes": 120000}}
+  ],
+  "expected": {"WS1": "critical", "AUTH1": "critical", "DB1": "suspicious"}
+}

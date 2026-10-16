@@ -1,0 +1,12 @@
+{
+  "id": "s2_failed_logins",
+  "name": "2. Repeated failed logins on a workstation",
+  "description": "Someone on the internet keeps guessing WS1's password (4 attempts per tick for 3 ticks) but never gets in. WS1 is under attack, not compromised.",
+  "topology": "enterprise_default",
+  "ticks": 10,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "steps": [
+    {"ticks": [2, 4], "type": "failed_login", "source": "INET", "target": "WS1", "repeat": 4, "malicious": true}
+  ],
+  "expected": {"WS1": "suspicious", "INET": "suspicious"}
+}

@@ -1,0 +1,16 @@
+{
+  "id": "s8_multi_step",
+  "name": "8. Multi-step incident with verification",
+  "description": "An external attacker brute-forces WS2, logs in, scans the network, breaks into DB1 and starts exfiltrating data. Full response: detect, investigate, contain, verify (traffic stops), recover.",
+  "topology": "enterprise_default",
+  "ticks": 16,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "steps": [
+    {"ticks": [1, 2], "type": "failed_login", "source": "INET", "target": "WS2", "repeat": 4, "malicious": true},
+    {"tick": 3, "type": "successful_login", "source": "INET", "target": "WS2", "malicious": true, "compromise": "WS2"},
+    {"tick": 4, "type": "port_scan", "source": "WS2", "targets": ["R1", "R2", "WS1"], "malicious": true, "requires_compromise": true},
+    {"tick": 5, "type": "unauthorized_access", "source": "WS2", "target": "DB1", "malicious": true, "requires_compromise": true},
+    {"ticks": [6, 15], "type": "unusual_traffic", "source": "WS2", "target": "DB1", "malicious": true, "requires_compromise": true, "details": {"bytes": 250000}}
+  ],
+  "expected": {"WS2": "critical", "DB1": "suspicious", "INET": "suspicious"}
+}

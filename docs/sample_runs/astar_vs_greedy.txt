@@ -1,0 +1,49 @@
+(simulated) link R1-R2 latency cost set to 10
+
+Heuristic for goal DB1: h(n) = hops x c_min (c_min=1)
+  node      h(n)  true cost  admissible?
+  INET         4         11  yes
+  FW1          3          6  yes
+  R1           2          5  yes
+  R2           1          1  yes
+  R3           2          3  yes
+  WEB1         4          7  yes
+  WEB2         4          7  yes
+  WS1          3          6  yes
+  WS2          3          6  yes
+  WS3          3          6  yes
+  WS4          3          6  yes
+  ADMIN1       3          6  yes
+  APP1         2          2  yes
+  DB1          0          0  yes
+  DB2          2          2  yes
+  AUTH1        2          2  yes
+
+=== A*  ADMIN1 -> DB1   (priority f = g + h) ===
+  step  expand  open list after (priority order)                     note
+     1  ADMIN1  R1(f=3)                                              g=0 h=3 f=3; R1: g=1 f=3
+     2  R1      FW1(f=5), R3(f=5), WS1(f=5), WS2(f=5), WS3(f=5), WS4(f=5), R2(f=12) g=1 h=2 f=3; FW1: g=2 f=5; WS1: g=2 f=5; WS2: g=2 f=5; WS3: g=2 f=5; WS4: g=2 f=5; R2: g=11 f=12; R3: g=3 f=5
+     3  R3      FW1(f=5), WS1(f=5), WS2(f=5), WS3(f=5), WS4(f=5), R2(f=6) g=3 h=2 f=5; R2: g=5 f=6
+     4  FW1     WS1(f=5), WS2(f=5), WS3(f=5), WS4(f=5), R2(f=6), WEB1(f=7), WEB2(f=7), INET(f=11) g=2 h=3 f=5; INET: g=7 f=11; WEB1: g=3 f=7; WEB2: g=3 f=7
+     5  WS1     WS2(f=5), WS3(f=5), WS4(f=5), R2(f=6), WEB1(f=7), WEB2(f=7), INET(f=11) g=2 h=3 f=5
+     6  WS2     WS3(f=5), WS4(f=5), R2(f=6), WEB1(f=7), WEB2(f=7), INET(f=11) g=2 h=3 f=5
+     7  WS3     WS4(f=5), R2(f=6), WEB1(f=7), WEB2(f=7), INET(f=11)  g=2 h=3 f=5
+     8  WS4     R2(f=6), WEB1(f=7), WEB2(f=7), INET(f=11)            g=2 h=3 f=5
+     9  R2      DB1(f=6), WEB1(f=7), WEB2(f=7), APP1(f=8), AUTH1(f=8), DB2(f=8), INET(f=11) g=5 h=1 f=6; APP1: g=6 f=8; DB1: g=6 f=6; DB2: g=6 f=8; AUTH1: g=6 f=8
+    10  DB1     WEB1(f=7), WEB2(f=7), APP1(f=8), AUTH1(f=8), DB2(f=8), INET(f=11) goal popped with g=6 (optimal)
+
+=== Greedy best-first  ADMIN1 -> DB1   (priority h only) ===
+  step  expand  open list after (priority order)                     note
+     1  ADMIN1  R1(h=2)                                              h=3; add [R1(h=2)]
+     2  R1      R2(h=1), R3(h=2), FW1(h=3), WS1(h=3), WS2(h=3), WS3(h=3), WS4(h=3) h=2; add [FW1(h=3), WS1(h=3), WS2(h=3), WS3(h=3), WS4(h=3), R2(h=1), R3(h=2)]
+     3  R2      DB1(h=0), R3(h=2), APP1(h=2), DB2(h=2), AUTH1(h=2), FW1(h=3), WS1(h=3), WS2(h=3), WS3(h=3), WS4(h=3) h=1; add [APP1(h=2), DB1(h=0), DB2(h=2), AUTH1(h=2)]
+     4  DB1     R3(h=2), APP1(h=2), DB2(h=2), AUTH1(h=2), FW1(h=3), WS1(h=3), WS2(h=3), WS3(h=3), WS4(h=3) goal reached (not necessarily the cheapest path)
+
+=== Comparison ===
+  algorithm            path                                     cost  expanded
+  BFS (fewest hops)    ADMIN1 -> R1 -> R2 -> DB1                  12         -
+  Uniform-cost         ADMIN1 -> R1 -> R3 -> R2 -> DB1             6        12
+  Greedy best-first    ADMIN1 -> R1 -> R2 -> DB1                  12         3
+  A*                   ADMIN1 -> R1 -> R3 -> R2 -> DB1             6         9
+
+  Greedy's route costs 12 vs A*'s 6: ignoring g(n) made it take the link that only *looked* closer.

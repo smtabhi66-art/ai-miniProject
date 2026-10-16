@@ -1,0 +1,55 @@
+{
+  "description": "Security knowledge for SentinelAI. Evidence rules turn counted events into base facts; logic rules derive conclusions by forward chaining; classification maps conclusions to threat levels.",
+
+  "evidence_rules": [
+    {"fact": "FailedLoginBurst",   "event": "failed_login",        "about": "target", "window": 3,  "threshold": 5, "description": "5+ failed logins against a device within 3 ticks"},
+    {"fact": "BruteForcing",       "event": "failed_login",        "about": "pair",   "window": 3,  "threshold": 5, "description": "one source made 5+ failed logins against one target within 3 ticks"},
+    {"fact": "LoggedIn",           "event": "successful_login",    "about": "pair",   "window": 5,  "threshold": 1, "description": "a successful login from source to target in the last 5 ticks"},
+    {"fact": "Scanning",           "event": "port_scan",           "about": "source", "window": 5,  "threshold": 1, "description": "device ran a port scan in the last 5 ticks"},
+    {"fact": "UnusualTraffic",     "event": "unusual_traffic",     "about": "pair",   "window": 3,  "threshold": 1, "description": "unusual traffic from source to target in the last 3 ticks"},
+    {"fact": "SustainedUnusualTraffic", "event": "unusual_traffic", "about": "pair",  "window": 3,  "threshold": 2, "description": "unusual traffic on 2+ occasions within 3 ticks"},
+    {"fact": "UnauthorizedAccess", "event": "unauthorized_access", "about": "pair",   "window": 6,  "threshold": 1, "description": "unauthorized access attempt in the last 6 ticks"}
+  ],
+
+  "rules": [
+    {"name": "R1_brute_force_target",  "if": ["FailedLoginBurst(?t)"], "then": "UnderAttack(?t)",
+     "description": "A burst of failed logins means the device is under a password attack"},
+    {"name": "R2_brute_force_source",  "if": ["BruteForcing(?s, ?t)"], "then": "Attacker(?s)",
+     "description": "Whoever makes the burst of failed logins is acting as an attacker"},
+    {"name": "R3_credential_compromise", "if": ["BruteForcing(?s, ?t)", "LoggedIn(?s, ?t)"], "then": "Compromised(?t)",
+     "description": "A successful login right after brute forcing means the password was guessed"},
+    {"name": "R4_internal_attacker",   "if": ["Attacker(?s)", "Internal(?s)"], "then": "Compromised(?s)",
+     "description": "An internal machine running a password attack is itself compromised"},
+    {"name": "R5_exfiltration",        "if": ["UnauthorizedAccess(?s, ?t)", "SustainedUnusualTraffic(?s, ?t)", "CriticalAsset(?t)"], "then": "Compromised(?s)",
+     "description": "Unauthorized access followed by sustained unusual traffic to a critical asset indicates data theft"},
+    {"name": "R6_targeted_asset",      "if": ["UnauthorizedAccess(?s, ?t)"], "then": "Targeted(?t)",
+     "description": "A device that receives unauthorized access attempts is being targeted"},
+    {"name": "R7_reconnaissance",      "if": ["Scanning(?s)"], "then": "Anomalous(?s)",
+     "description": "Port scanning is reconnaissance behaviour"},
+    {"name": "R8_unusual_sender",      "if": ["UnusualTraffic(?s, ?t)"], "then": "Anomalous(?s)",
+     "description": "Sending unusual traffic is anomalous behaviour"},
+    {"name": "R9_unauthorized_sender", "if": ["UnauthorizedAccess(?s, ?t)"], "then": "Anomalous(?s)",
+     "description": "Attempting unauthorized access is anomalous behaviour"},
+    {"name": "R10_threatens_asset",    "if": ["Compromised(?d)", "UnusualTraffic(?d, ?a)", "CriticalAsset(?a)"], "then": "ThreatensCriticalAsset(?d, ?a)",
+     "description": "A compromised device sending unusual traffic to a critical asset threatens it"},
+    {"name": "R11_entry_point",        "if": ["Compromised(?t)", "LoggedIn(?s, ?t)", "Internal(?s)"], "then": "Compromised(?s)",
+     "description": "The internal device that logged in to a device shortly before it was found compromised is the likely entry point"},
+    {"name": "M1_scan_is_malicious",   "if": ["Scanning(?d)"], "then": "MaliciousActivity(?d)", "description": "Scanning counts as malicious activity"},
+    {"name": "M2_traffic_is_malicious", "if": ["UnusualTraffic(?d, ?t)"], "then": "MaliciousActivity(?d)", "description": "Unusual traffic counts as malicious activity"},
+    {"name": "M3_bruteforce_is_malicious", "if": ["BruteForcing(?d, ?t)"], "then": "MaliciousActivity(?d)", "description": "Brute forcing counts as malicious activity"},
+    {"name": "M4_access_is_malicious", "if": ["UnauthorizedAccess(?d, ?t)"], "then": "MaliciousActivity(?d)", "description": "Unauthorized access counts as malicious activity"},
+    {"name": "V1_active_compromise_behaviour", "if": ["ActiveCompromise(?d)"], "then": "MaliciousActivity(?d)",
+     "description": "Model of attacker behaviour in this simulation: an actively compromised device produces malicious activity. Used backwards (Modus Tollens) during verification."}
+  ],
+
+  "classification": {
+    "critical":   ["Compromised"],
+    "suspicious": ["UnderAttack", "Attacker", "Targeted", "Anomalous"]
+  },
+
+  "verification": {
+    "rule": "V1_active_compromise_behaviour",
+    "observed_fact": "MaliciousActivity",
+    "quiet_ticks": 2
+  }
+}

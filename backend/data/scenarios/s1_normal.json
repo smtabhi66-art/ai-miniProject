@@ -1,0 +1,10 @@
+{
+  "id": "s1_normal",
+  "name": "1. Normal network activity",
+  "description": "Only routine traffic and the occasional mistyped password. A rational agent raises no incidents.",
+  "topology": "enterprise_default",
+  "ticks": 10,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.15},
+  "steps": [],
+  "expected": {}
+}

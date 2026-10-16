@@ -1,0 +1,9 @@
+scenario                     score contained outage over-react detect acc  incidents (device:decision:status)
+s1_normal                        0         0      0          0        1.0  -
+s2_failed_logins                 0         0      0          0        1.0  WS1:MONITOR:resolved
+s3_lateral_traffic               0         0      0          0        1.0  WS2:MONITOR:resolved
+s4_compromised_to_server         4         1      0          0        1.0  WS3:ISOLATE:resolved DB1:MONITOR:resolved
+s5_multi_compromise             12         2      0          0        1.0  APP1:RESTRICT:contained DB1:MONITOR:resolved WS2:ISOLATE:resolved
+s6_blocked_path                  0         0      0          0        1.0  WS4:MONITOR:resolved AUTH1:MONITOR:resolved
+s7_isolation_constraint         10         2      0          0        1.0  DB1:MONITOR:resolved AUTH1:RESTRICT:contained WS1:ISOLATE:resolved
+s8_multi_step                   10         1      0          0        1.0  WS2:ISOLATE:resolved

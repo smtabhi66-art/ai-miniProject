@@ -1,0 +1,47 @@
+=== Incident on WS2, CSP decision ISOLATE ===
+Initial state: ['CSPAllows(WS2, ISOLATE)', 'Detected(WS2)', 'Online(WS2)']
+Goal:          ['Recovered(WS2)', 'Verified(WS2)']
+
+Goal-based (forward BFS): 8 steps, 44 states explored
+   collect_evidence(WS2)
+   analyze_blast_radius(WS2)
+   approve_isolation(WS2)
+   isolate_device(WS2)
+   verify_containment(WS2)
+   remediate_device(WS2)
+   reset_credentials(WS2)
+   restore_device(WS2)
+
+Goal-stack for Contained(WS2):
+   Contained(WS2): false -> choose isolate_device(WS2), push its preconditions
+   IsolationApproved(WS2): false -> choose approve_isolation(WS2), push its preconditions
+   CSPAllows(WS2, ISOLATE): already true
+   Investigated(WS2): false -> choose analyze_blast_radius(WS2), push its preconditions
+   EvidenceCollected(WS2): false -> choose collect_evidence(WS2), push its preconditions
+   Detected(WS2): already true
+   apply collect_evidence(WS2)
+   apply analyze_blast_radius(WS2)
+   apply approve_isolation(WS2)
+   Online(WS2): already true
+   apply isolate_device(WS2)
+
+HTN decomposition:
+   HandleIncident(WS2)  [method: full]
+     Detect(WS2)  [method: collect]
+       • collect_evidence(WS2)
+     Investigate(WS2)  [method: analyze]
+       • analyze_blast_radius(WS2)
+     Contain(WS2)  [method: by_goal_stack]
+       • approve_isolation(WS2)
+       • isolate_device(WS2)
+     Verify(WS2)  [method: containment]
+       • verify_containment(WS2)
+     Recover(WS2)  [method: isolated]
+       • remediate_device(WS2)
+       • reset_credentials(WS2)
+       • restore_device(WS2)
+HTN plan valid against the goal? True (valid)
+
+=== Sussman anomaly (why goal-stack planning is not complete/optimal) ===
+Forward BFS: 6 steps: unstack(C, A), putdown(C), pickup(B), stack(B, C), pickup(A), stack(A, B)
+Goal-stack failed: no plan within 500 steps (goals keep undoing each other)

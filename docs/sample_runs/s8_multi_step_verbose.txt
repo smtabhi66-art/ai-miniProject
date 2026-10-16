@@ -1,0 +1,87 @@
+8. Multi-step incident with verification  (seed 42, active mode)
+An external attacker brute-forces WS2, logs in, scans the network, breaks into DB1 and starts exfiltrating data. Full response: detect, investigate, contain, verify (traffic stops), recover.
+
+--- tick 1 ------------------------------------------------------------
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+--- tick 2 ------------------------------------------------------------
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  event   failed_login         INET -> WS2
+  Logic: forward chaining (Modus Ponens) 3 inference(s); 2 device(s) flagged
+      [modus ponens] R1_brute_force_target: FailedLoginBurst(WS2) ⊢ UnderAttack(WS2)
+      [modus ponens] R2_brute_force_source: BruteForcing(INET, WS2) ⊢ Attacker(INET)
+      [modus ponens] M3_bruteforce_is_malicious: BruteForcing(INET, WS2) ⊢ MaliciousActivity(INET)
+      WS2: UnderAttack(WS2)  [derived by R1_brute_force_target]
+      INET: Attacker(INET)  [derived by R2_brute_force_source]
+  Incident                               INC-001 opened for WS2 (suspicious)
+      UnderAttack(WS2)  [derived by R1_brute_force_target]
+        FailedLoginBurst(WS2)  [observed: 8 failed_login event(s) in ticks 1-2 (threshold 5 in 3)]
+  CSP: isolation decision                WS2=MONITOR
+      WS2 != RESTRICT  (restrict_needs_service, node)
+      decisions: {'WS2': 'MONITOR'}
+  Planning: HTN + goal-stack             INC-001: collect_evidence -> analyze_blast_radius -> increase_monitoring -> verify_quiet -> reset_credentials
+      HandleIncident(WS2)  [method: full]
+        Detect(WS2)  [method: collect]
+          • collect_evidence(WS2)
+        Investigate(WS2)  [method: analyze]
+          • analyze_blast_radius(WS2)
+        Contain(WS2)  [method: monitor]
+          • increase_monitoring(WS2)
+        Verify(WS2)  [method: quiet]
+          • verify_quiet(WS2)
+        Recover(WS2)  [method: attacked]
+          • reset_credentials(WS2)
+  Search: BFS, DFS, Greedy, A*           WS2: reaches 15 device(s) within 3 hop(s); 10 attack path(s) to critical assets; chokepoint(s): R1; likely direction (Greedy): WS2 -> R1 -> R2 -> AUTH1; safe admin route (A*): ADMIN1 -> R1 -> WS2
+      blast radius: [['WS2'], ['R1'], ['FW1', 'WS1', 'WS3', 'WS4', 'ADMIN1', 'R2', 'R3'], ['INET', 'WEB1', 'WEB2', 'APP1', 'DB1', 'DB2', 'AUTH1']]
+      chokepoints: ['R1']
+  Action (simulated)                     INC-001: increase_monitoring(WS2)
+--- tick 3 ------------------------------------------------------------
+  event   successful_login     INET -> WS2
+  Logic: forward chaining (Modus Ponens) 4 inference(s); 2 device(s) flagged
+      [modus ponens] R1_brute_force_target: FailedLoginBurst(WS2) ⊢ UnderAttack(WS2)
+      [modus ponens] R2_brute_force_source: BruteForcing(INET, WS2) ⊢ Attacker(INET)
+      [modus ponens] R3_credential_compromise: BruteForcing(INET, WS2) ∧ LoggedIn(INET, WS2) ⊢ Compromised(WS2)
+      [modus ponens] M3_bruteforce_is_malicious: BruteForcing(INET, WS2) ⊢ MaliciousActivity(INET)
+      WS2: Compromised(WS2)  [derived by R3_credential_compromise]
+      INET: Attacker(INET)  [derived by R2_brute_force_source]
+  CSP: isolation decision                WS2=ISOLATE
+      WS2 != RESTRICT  (restrict_needs_service, node)
+      WS2 != MONITOR  (contain_compromised, node)
+      decisions: {'WS2': 'ISOLATE'}
+  Planning: HTN + goal-stack             INC-001: approve_isolation -> isolate_device -> verify_containment -> remediate_device -> reset_credentials -> restore_device
+      HandleIncident(WS2)  [method: resume]
+        Contain(WS2)  [method: by_goal_stack]
+          • approve_isolation(WS2)
+          • isolate_device(WS2)
+        Verify(WS2)  [method: containment]
+          • verify_containment(WS2)
+        Recover(WS2)  [method: isolated]
+          • remediate_device(WS2)
+          • reset_credentials(WS2)
+          • restore_device(WS2)
+  Action (simulated)                     INC-001: isolate_device(WS2)
+--- tick 4 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+      WS2: Compromised(WS2)  [belief: concluded earlier and kept until recovery]
+--- tick 5 ------------------------------------------------------------
+  Logic: forward chaining (Modus Ponens) 0 inference(s); 1 device(s) flagged
+      WS2: Compromised(WS2)  [belief: concluded earlier and kept until recovery]
+  Verification: Modus Tollens            INC-001: containment passed
+      Rule V1_active_compromise_behaviour: ActiveCompromise(?d) ⇒ MaliciousActivity(?d)
+      [modus tollens] V1_active_compromise_behaviour: ¬MaliciousActivity(WS2) ⊢ ¬ActiveCompromise(WS2)
+      ¬ActiveCompromise(WS2)  [modus tollens by V1_active_compromise_behaviour]
+        ¬MaliciousActivity(WS2)  [observed: no malicious events from WS2 in ticks 4-5]
+  Action (simulated)                     INC-001: remediate_device(WS2)
+  Action (simulated)                     INC-001: reset_credentials(WS2)
+  Action (simulated)                     INC-001: restore_device(WS2)
+  Incident                               INC-001 resolved
+
+=== Result ===
+  INC-001 WS2    critical   decision=ISOLATE  status=resolved  verified=True
+  Performance score: 10   {'contained': 1, 'outage_ticks': 0, 'healthy_isolated': 0, 'active_compromise_ticks': 0, 'false_positives': 0}
+  Detection accuracy (peak level vs ground truth): 0.938   mistakes: [{'device': 'DB1', 'expected': 'suspicious', 'predicted': 'normal'}]
+  Attack events delivered: 9, prevented by containment: 14

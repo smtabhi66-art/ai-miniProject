@@ -1,0 +1,16 @@
+{
+  "id": "s5_multi_compromise",
+  "name": "5. Multiple compromised machines with service dependencies",
+  "description": "Compromised WS2 quietly logs into APP1, the only application server, with stolen credentials (no brute force to give it away). APP1 then breaks into DB1 and talks abnormally to both databases, while WS2 probes WS3. Web depends on app, which depends on db and auth, so APP1 cannot simply be isolated.",
+  "topology": "enterprise_default",
+  "ticks": 14,
+  "background": {"normal_traffic_per_tick": 3, "benign_failed_login_prob": 0.05},
+  "initial_compromised": ["WS2"],
+  "steps": [
+    {"tick": 2, "type": "successful_login", "source": "WS2", "target": "APP1", "malicious": true, "requires_compromise": true, "compromise": "APP1"},
+    {"tick": 3, "type": "unauthorized_access", "source": "APP1", "target": "DB1", "malicious": true, "requires_compromise": true},
+    {"ticks": [4, 12], "type": "unusual_traffic", "source": "APP1", "targets": ["DB1", "DB2"], "malicious": true, "requires_compromise": true, "details": {"bytes": 180000}},
+    {"ticks": [4, 12], "type": "unusual_traffic", "source": "WS2", "target": "WS3", "malicious": true, "requires_compromise": true}
+  ],
+  "expected": {"WS2": "critical", "APP1": "critical", "DB1": "suspicious"}
+}

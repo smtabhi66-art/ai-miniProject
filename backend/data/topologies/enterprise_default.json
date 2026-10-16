@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "name": "Enterprise Default",
+    "description": "16-device simulated enterprise network. All addresses are simulated labels; 203.0.113.0/24 is a reserved documentation range.",
+    "admin_device": "ADMIN1",
+    "layout": {
+      "INET": [470, 0],
+      "WEB1": [250, 140], "FW1": [470, 140], "WEB2": [690, 140],
+      "WS1": [20, 280], "WS2": [170, 280], "WS3": [20, 385], "WS4": [170, 385], "ADMIN1": [95, 490],
+      "R1": [470, 280], "R3": [700, 365], "R2": [470, 450],
+      "APP1": [260, 630], "DB1": [420, 630], "DB2": [580, 630], "AUTH1": [740, 630]
+    }
+  },
+  "devices": [
+    {"id": "INET",   "name": "Internet (simulated)",  "type": "external",          "zone": "external",  "ip": "203.0.113.1", "criticality": 1, "trust_level": 0.0},
+    {"id": "FW1",    "name": "Perimeter Firewall",    "type": "firewall",          "zone": "perimeter", "ip": "10.0.0.1",    "criticality": 5, "trust_level": 0.9},
+    {"id": "R1",     "name": "Core Router",           "type": "router",            "zone": "core",      "ip": "10.0.0.2",    "criticality": 4, "trust_level": 0.9},
+    {"id": "R2",     "name": "Server Router",         "type": "router",            "zone": "core",      "ip": "10.0.0.3",    "criticality": 4, "trust_level": 0.9},
+    {"id": "R3",     "name": "Backup Router",         "type": "router",            "zone": "core",      "ip": "10.0.0.4",    "criticality": 3, "trust_level": 0.9},
+    {"id": "WEB1",   "name": "Web Server 1",          "type": "server",            "zone": "dmz",       "ip": "10.0.2.11",   "criticality": 4, "trust_level": 0.7, "services": ["web"]},
+    {"id": "WEB2",   "name": "Web Server 2",          "type": "server",            "zone": "dmz",       "ip": "10.0.2.12",   "criticality": 4, "trust_level": 0.7, "services": ["web"]},
+    {"id": "WS1",    "name": "Workstation 1",         "type": "workstation",       "zone": "office",    "ip": "10.0.1.11",   "criticality": 1, "trust_level": 0.6},
+    {"id": "WS2",    "name": "Workstation 2",         "type": "workstation",       "zone": "office",    "ip": "10.0.1.12",   "criticality": 1, "trust_level": 0.6},
+    {"id": "WS3",    "name": "Workstation 3",         "type": "workstation",       "zone": "office",    "ip": "10.0.1.13",   "criticality": 1, "trust_level": 0.6},
+    {"id": "WS4",    "name": "Workstation 4",         "type": "workstation",       "zone": "office",    "ip": "10.0.1.14",   "criticality": 1, "trust_level": 0.6},
+    {"id": "ADMIN1", "name": "Admin Workstation",     "type": "admin_workstation", "zone": "office",    "ip": "10.0.1.50",   "criticality": 3, "trust_level": 0.8},
+    {"id": "APP1",   "name": "Application Server",    "type": "server",            "zone": "server",    "ip": "10.0.3.11",   "criticality": 4, "trust_level": 0.8, "services": ["app"]},
+    {"id": "DB1",    "name": "Primary Database",      "type": "database",          "zone": "server",    "ip": "10.0.3.21",   "criticality": 5, "trust_level": 0.85, "services": ["db"]},
+    {"id": "DB2",    "name": "Replica Database",      "type": "database",          "zone": "server",    "ip": "10.0.3.22",   "criticality": 5, "trust_level": 0.85, "services": ["db"]},
+    {"id": "AUTH1",  "name": "Authentication Server", "type": "server",            "zone": "server",    "ip": "10.0.3.31",   "criticality": 5, "trust_level": 0.9, "services": ["auth"]}
+  ],
+  "links": [
+    {"source": "INET", "target": "FW1",    "latency_cost": 5, "risk": 0.9},
+    {"source": "FW1",  "target": "WEB1",   "latency_cost": 1, "risk": 0.4},
+    {"source": "FW1",  "target": "WEB2",   "latency_cost": 1, "risk": 0.4},
+    {"source": "FW1",  "target": "R1",     "latency_cost": 1, "risk": 0.3},
+    {"source": "R1",   "target": "WS1",    "latency_cost": 1, "risk": 0.2},
+    {"source": "R1",   "target": "WS2",    "latency_cost": 1, "risk": 0.2},
+    {"source": "R1",   "target": "WS3",    "latency_cost": 1, "risk": 0.2},
+    {"source": "R1",   "target": "WS4",    "latency_cost": 1, "risk": 0.2},
+    {"source": "R1",   "target": "ADMIN1", "latency_cost": 1, "risk": 0.1},
+    {"source": "R1",   "target": "R2",     "latency_cost": 2, "risk": 0.1},
+    {"source": "R1",   "target": "R3",     "latency_cost": 2, "risk": 0.1},
+    {"source": "R3",   "target": "R2",     "latency_cost": 2, "risk": 0.1},
+    {"source": "R2",   "target": "APP1",   "latency_cost": 1, "risk": 0.1},
+    {"source": "R2",   "target": "DB1",    "latency_cost": 1, "risk": 0.1},
+    {"source": "R2",   "target": "DB2",    "latency_cost": 1, "risk": 0.1},
+    {"source": "R2",   "target": "AUTH1",  "latency_cost": 1, "risk": 0.1}
+  ],
+  "services": [
+    {"name": "web",  "hosts": ["WEB1", "WEB2"], "critical": true, "depends_on": ["app"]},
+    {"name": "app",  "hosts": ["APP1"],         "critical": true, "depends_on": ["db", "auth"]},
+    {"name": "db",   "hosts": ["DB1", "DB2"],   "critical": true, "depends_on": []},
+    {"name": "auth", "hosts": ["AUTH1"],        "critical": true, "depends_on": []}
+  ]
+}
